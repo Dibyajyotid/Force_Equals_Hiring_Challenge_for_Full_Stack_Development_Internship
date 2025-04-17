@@ -8,26 +8,26 @@ function createWidget(data) {
   const widget = document.createElement("div");
   widget.className = "linkedin-enhancer-widget";
   widget.innerHTML = `
-      <div class="widget-header">Company Information</div>
-      <div class="company-name">${data.companyName}</div>
-      <div class="score-container">
-        <div class="score-label">
-          <span>Match Score</span>
-          <span class="score-value">${data.matchScore}%</span>
+        <div class="widget-header">Company Information</div>
+        <div class="company-name">${data.companyName}</div>
+        <div class="score-container">
+          <div class="score-label">
+            <span>Match Score</span>
+            <span class="score-value">${data.matchScore}%</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: ${data.matchScore}%"></div>
+          </div>
         </div>
-        <div class="progress-bar">
-          <div class="progress-fill" style="width: ${data.matchScore}%"></div>
+        <div class="status-container">
+          <span class="status-label">Account Status:</span>
+          <span class="status-tag status-${data.accountStatus
+            .toLowerCase()
+            .replace(" ", "-")}">
+            ${data.accountStatus}
+          </span>
         </div>
-      </div>
-      <div class="status-container">
-        <span class="status-label">Account Status:</span>
-        <span class="status-tag status-${data.accountStatus
-          .toLowerCase()
-          .replace(" ", "-")}">
-          ${data.accountStatus}
-        </span>
-      </div>
-    `;
+      `;
 
   document.body.appendChild(widget);
 
@@ -38,7 +38,7 @@ function createWidget(data) {
   });
 }
 
-// Load data from JSON file
+// Load data from JSON file and create widget
 fetch(chrome.runtime.getURL("data.json"))
   .then((response) => response.json())
   .then((data) => {
@@ -51,6 +51,12 @@ fetch(chrome.runtime.getURL("data.json"))
   })
   .catch((error) => {
     console.error("Error loading data:", error);
+    // Provide fallback data if JSON fails to load
+    createWidget({
+      companyName: "Error Loading Data",
+      matchScore: 0,
+      accountStatus: "Unknown",
+    });
   });
 
 // Listen for messages from popup
@@ -58,19 +64,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   if (request.action === "toggleWidget") {
     const widget = document.querySelector(".linkedin-enhancer-widget");
     if (widget) {
-      if (request.visible) {
-        widget.classList.remove("hidden");
-      } else {
-        widget.classList.add("hidden");
-      }
+      widget.classList.toggle("hidden", !request.visible);
     }
   }
 });
-
-// Checking if we are on a profile page and inject the widget
-if (
-  window.location.href.includes("/in/") ||
-  window.location.href.includes("/company/")
-) {
-  createWidget(data);
-}

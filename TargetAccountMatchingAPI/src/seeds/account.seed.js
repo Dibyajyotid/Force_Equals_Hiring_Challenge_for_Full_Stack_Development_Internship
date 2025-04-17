@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import dotenv from "dotenv";
-import Account from "../models/Account.model.js"; 
+import Account from "../models/Account.model.js";
+import { connectDB } from "../lib/db.js";
 
 dotenv.config();
 
@@ -34,12 +35,13 @@ const sampleAccounts = [
 
 const seedData = async () => {
   try {
-    await mongoose.connect(process.env.MONGO_URI);
+    await connectDB();
     console.log("Connected to MongoDB");
 
     await Account.insertMany(sampleAccounts);
     console.log("Sample accounts seeded");
 
+    mongoose.connection.close();
     process.exit();
   } catch (err) {
     console.error("Error seeding data:", err);
